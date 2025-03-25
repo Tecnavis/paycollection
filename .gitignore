@@ -1,0 +1,41 @@
+# Ignore environment files
+.env
+.env.local
+.env.*     # Ignore all environment files except those explicitly tracked
+*.ini
+settings.ini
+
+# Ignore compiled Python files and cache directories
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore the database (if using SQLite)
+*.sqlite3
+db.sqlite3
+db.sqlite3-journal
+
+# Ignore Virtual Environment
+.venv/
+venv/
+env/
+
+# Ignore static and media files (if generated dynamically)
+staticfiles/
+media/
+
+# Django migrations (ignore all but keep __init__.py)
+**/migrations/*
+!**/migrations/__init__.py
+
+# Ignore IDE/editor config files
+.vscode/
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# Ignore deployment-related files
+*.DS_Store   # macOS system files
+Thumbs.db    # Windows system file
