@@ -9,8 +9,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
+# ALLOWED_HOSTS = ["paycollection.onrender.com", "localhost"]
 
 ALLOWED_HOSTS = ["https://paycollection.onrender.com", "localhost", "127.0.0.1"]
+
+CSRF_TRUSTED_ORIGINS = ["https://paycollection.onrender.com"]
 
 INSTALLED_APPS = [
     'corsheaders', 
