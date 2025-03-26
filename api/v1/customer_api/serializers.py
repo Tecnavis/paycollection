@@ -25,7 +25,7 @@ class CustomerAssignmentSerializer(serializers.ModelSerializer):
 class UserSerializer(ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['first_name','last_name','email']
+        fields = ["id", "first_name", "last_name", "email", "contact_number"] 
     
 class CustomerSerializer(ModelSerializer):
     class Meta:

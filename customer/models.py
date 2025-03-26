@@ -3,7 +3,9 @@ from users.models import CustomUser
 
 
 class Customer(models.Model):
+    profile_id = models.CharField(max_length=50, unique=True, blank=True, null=True)
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="customer_profile")
+    shop_name = models.CharField(max_length=255, blank=True, null=True)
     secondary_contact = models.CharField(max_length=15, unique=True)
     address = models.TextField(blank=True, null=True)
     other_info = models.TextField(blank=True, null=True)
