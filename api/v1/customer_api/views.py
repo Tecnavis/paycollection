@@ -18,14 +18,14 @@ def customer_detail(request, id):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(["PUT"])
+@api_view(["PUT", "PATCH"])
 @permission_classes([IsAuthenticated])
 def customer_update(request, id):
-    """Update an existing customer."""
-    customer = get_object_or_404(Customer, id=id, is_deleted=False)
+    """Update an existing customer and its associated CustomUser."""
+    customer = get_object_or_404(Customer, id=id)
     serializer = CustomerSerializer(customer, data=request.data, partial=True, context={"request": request})
     if serializer.is_valid():
-        serializer.save()
+        serializer.save(updated_by=request.user) 
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
