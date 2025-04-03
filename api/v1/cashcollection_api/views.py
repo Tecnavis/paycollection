@@ -134,20 +134,7 @@ def customer_scheme_payment_list(request):
     serializer = CustomerSchemePaymentSerializer(entries, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-# @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
-# def customer_scheme_payment_list(request):
-#     # Get unique (customer, scheme) pairs
-#     unique_entries = (
-#         CashCollectionEntry.objects.order_by("customer", "scheme")
-#         .distinct("customer", "scheme")
-#     )
 
-#     # Serialize the data
-#     serializer = CustomerSchemePaymentSerializer(unique_entries, many=True)
-
-#     return Response(serializer.data, status=status.HTTP_200_OK)
-# Detail view function
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def cash_collection_entry_detail(request, pk):

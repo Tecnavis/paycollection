@@ -6,7 +6,7 @@ class Customer(models.Model):
     profile_id = models.CharField(max_length=50, unique=True, blank=True, null=True)
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="customer_profile")
     shop_name = models.CharField(max_length=255, blank=True, null=True)
-    secondary_contact = models.CharField(max_length=15, unique=True)
+    secondary_contact = models.CharField(max_length=15, unique=False, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     other_info = models.TextField(blank=True, null=True)
     
@@ -31,7 +31,7 @@ class Customer(models.Model):
 
 class Agent(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="agent_profile")
-    secondary_contact = models.CharField(max_length=15, unique=True)
+    secondary_contact = models.CharField(max_length=15, unique=True, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     other_info = models.TextField(blank=True, null=True)
     
@@ -59,7 +59,7 @@ class Agent(models.Model):
         ordering = ['user__first_name', 'user__last_name']
 
     def __str__(self):
-        return f'{self.user.email}'           
+        return f"{self.user.first_name} {self.user.last_name}"          
 
 
 class CustomerAssignment(models.Model):

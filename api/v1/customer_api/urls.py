@@ -12,7 +12,7 @@ urlpatterns = [
     path("customers/<int:id>/update/", views.customer_update, name="customer_update"),
 
     path('partner/', views.list_agents, name='agent-list'),
-    path('partners/create/', views.create_agent, name='agent-create'),
+    path('partners/create/', views.agent_create, name='agent-create'),
     path('partners/<int:id>/', views.update_agent, name='agent-update'),
     path('partners/<int:id>/delete/', views.delete_agent, name='agent-delete'),
     path('partners/<int:id>/details/', views.agent_detail, name='agent-details'),
