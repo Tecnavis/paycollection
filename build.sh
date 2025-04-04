@@ -8,7 +8,6 @@ pip install -r requirements.txt
 
 echo "Making migrations..."
 python manage.py makemigrations
-python manage.py makemigrations collectionplans
 
 echo "Applying migrations..."
 python manage.py migrate
