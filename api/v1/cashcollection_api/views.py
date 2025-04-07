@@ -113,6 +113,7 @@ def cashcollection_delete(request, id):
 @permission_classes([IsAuthenticated])
 def cash_collection_entry_create(request):
     data = request.data
+    print(data,"collection entry?")
     serializer = CashCollectionEntrySerializer(data=data)
     if serializer.is_valid():
         serializer.save(created_by=request.user, updated_by=request.user)

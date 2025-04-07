@@ -63,7 +63,7 @@ class CashCollectionEntry(models.Model):
         choices=[("cash", "Cash"), ("bank_transfer", "Bank Transfer"), ("upi", "UPI")], 
         default="cash"
     )
-    # collection_date = models.DateField(null=True, blank=True)
+    collection_date = models.DateField(null=True, blank=True)
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name="created_entries")
     updated_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name="updated_entries")
 
