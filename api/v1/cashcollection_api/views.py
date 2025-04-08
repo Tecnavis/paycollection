@@ -135,6 +135,18 @@ def customer_scheme_payment_list(request):
     serializer = CustomerSchemePaymentSerializer(entries, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def customer_scheme_payment_list_logged_in_user(request):
+    user = request.user
+    try:
+        customer = Customer.objects.get(user=user)  # Assuming OneToOne or FK relation
+    except Customer.DoesNotExist:
+        return Response({"detail": "Customer profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    entries = CashCollectionEntry.objects.filter(customer=customer)
+    serializer = CustomerSchemePaymentSerializer(entries, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
