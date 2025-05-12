@@ -16,9 +16,16 @@ urlpatterns = [
 
     path("cashcollection/bycustomer/create/", views.cash_collection_entry_create, name="cash-collection-entry"),
     path("cashcollection/bycustomer/", views.cash_collection_entry_list, name="cash-collection-entry-list"),
-    # payment history
+    path("cashcollection/bycustomer/<int:pk>/", views.cash_collection_entry_update, name="cash-collection-entry-update"),
+    path("cashcollection/bycustomer/<int:pk>/delete/", views.cash_collection_entry_delete, name="cash-collection-entry-delete"),
+    
+    
+    path("customer-transactions/", views.customer_transaction_list, name="customer-transaction-list"),
+    path("customer-transactions/<int:pk>/", views.customer_transaction_update, name="customer-transaction-update"),
+    path("customer-transactions/<int:pk>/delete/", views.customer_transaction_delete, name="customer-transaction-delete"),
+    
+    # Payment history
     path("customer-scheme-payments/", views.customer_scheme_payment_list, name="customer-scheme-payments"),
     path("customer-scheme-payment/", views.customer_scheme_payment_list_logged_in_user, name="customer-scheme-payments-by-id"),
     path('customer-schemes/', views.get_customer_schemes, name='customer-scheme-list'),
-
-] 
+]

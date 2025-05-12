@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from .serializers import SchemeSerializer,CashCollectionSerializer,CashCollectionEntrySerializer,CustomerSchemePaymentSerializer
+from .serializers import SchemeSerializer, CashCollectionSerializer, CashCollectionEntrySerializer, CustomerSchemePaymentSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from collectionplans.models import CashCollection, Scheme
@@ -24,7 +24,7 @@ def scheme_create(request):
     """Create a new scheme."""
     serializer = SchemeSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        serializer.save(created_by=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -39,13 +39,13 @@ def scheme_update(request, id):
     
     serializer = SchemeSerializer(scheme, data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        serializer.save(updated_by=request.user)
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def enroll_customer_in_scheme(request):
     """Enrolls a customer in a selected scheme (Creates CashCollection)."""
    
@@ -64,12 +64,12 @@ def enroll_customer_in_scheme(request):
     if existing_entry:
         return Response({"error": "Customer is already enrolled in this scheme"}, status=status.HTTP_400_BAD_REQUEST)
     
-    # Prepare data for serializer
+
     data = request.data.copy()
     
     serializer = CashCollectionSerializer(data=data)
     if serializer.is_valid():
-        # Pass customer and scheme directly, don't try to add customer afterwards
+        
         cash_collection = serializer.save(
             created_by=request.user,
             customer=customer,
@@ -113,18 +113,17 @@ def cashcollection_delete(request, id):
 @permission_classes([IsAuthenticated])
 def cash_collection_entry_create(request):
     data = request.data
-    print(data,"collection entry?")
     serializer = CashCollectionEntrySerializer(data=data)
     if serializer.is_valid():
         serializer.save(created_by=request.user, updated_by=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# List view function
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def cash_collection_entry_list(request):
-    entries = CashCollectionEntry.objects.all()
+    entries = CashCollectionEntry.objects.all().order_by('-created_at')  
     serializer = CashCollectionEntrySerializer(entries, many=True)
     return Response(serializer.data)
 
@@ -140,7 +139,7 @@ def customer_scheme_payment_list(request):
 def customer_scheme_payment_list_logged_in_user(request):
     user = request.user
     try:
-        customer = Customer.objects.get(user=user)  # Assuming OneToOne or FK relation
+        customer = Customer.objects.get(user=user)  
     except Customer.DoesNotExist:
         return Response({"detail": "Customer profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -159,38 +158,82 @@ def cash_collection_entry_detail(request, pk):
     serializer = CashCollectionEntrySerializer(entry)
     return Response(serializer.data)
 
-# Update view function
-@api_view(['PUT'])
+
+@api_view(['PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def cash_collection_entry_update(request, pk):
     try:
         entry = CashCollectionEntry.objects.get(pk=pk)
     except CashCollectionEntry.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "Transaction not found"}, status=status.HTTP_404_NOT_FOUND)
     
-    serializer = CashCollectionEntrySerializer(entry, data=request.data)
+
+    data = {
+        'amount': request.data.get('amount', entry.amount),
+        'payment_method': request.data.get('payment_method', entry.payment_method)
+    }
+    
+    serializer = CashCollectionEntrySerializer(entry, data=data, partial=True)
     if serializer.is_valid():
         serializer.save(updated_by=request.user)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Delete view function
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def cash_collection_entry_delete(request, pk):
     try:
         entry = CashCollectionEntry.objects.get(pk=pk)
     except CashCollectionEntry.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "Transaction not found"}, status=status.HTTP_404_NOT_FOUND)
     
     entry.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def customer_transaction_list(request):
+    """Get all customer transaction entries."""
+    entries = CashCollectionEntry.objects.all().order_by('-created_at')
+    serializer = CashCollectionEntrySerializer(entries, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def customer_transaction_update(request, pk):
+    """Update a customer transaction entry."""
+    try:
+        entry = CashCollectionEntry.objects.get(pk=pk)
+    except CashCollectionEntry.DoesNotExist:
+        return Response({"error": "Transaction not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    
+    data = {
+        'amount': request.data.get('amount', entry.amount),
+        'payment_method': request.data.get('payment_method', entry.payment_method)
+    }
+    
+    serializer = CashCollectionEntrySerializer(entry, data=data, partial=True)
+    if serializer.is_valid():
+        serializer.save(updated_by=request.user)
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def customer_transaction_delete(request, pk):
+    """Delete a customer transaction entry."""
+    try:
+        entry = CashCollectionEntry.objects.get(pk=pk)
+    except CashCollectionEntry.DoesNotExist:
+        return Response({"error": "Transaction not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    entry.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
-# ...........................................................................................................
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

@@ -58,12 +58,20 @@ class CashCollectionEntry(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="collection_entries")
     scheme = models.ForeignKey(Scheme, on_delete=models.CASCADE, related_name="scheme_collections", null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    
+    PAYMENT_METHOD_CHOICES = [
+        ("cash", "Cash"), 
+        ("bank_transfer", "Bank Transfer"), 
+        ("upi", "UPI")
+    ]
+    
     payment_method = models.CharField(
         max_length=20, 
-        choices=[("cash", "Cash"), ("bank_transfer", "Bank Transfer"), ("upi", "UPI")], 
+        choices=PAYMENT_METHOD_CHOICES, 
         default="cash"
     )
-    # collection_date = models.DateField(null=True, blank=True)
+    
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name="created_entries")
     updated_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name="updated_entries")
 
@@ -104,6 +112,3 @@ class CashTransfer(models.Model):
 
     def __str__(self):
         return f"{self.source} to {self.destination} - {self.amount} - {self.transfer_date}"
-
-
-

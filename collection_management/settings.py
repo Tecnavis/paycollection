@@ -8,6 +8,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
+
 DEBUG = True
 
 
@@ -15,6 +16,7 @@ ALLOWED_HOSTS = ["paycollection.onrender.com", "localhost","127.0.0.1"]
 
 
 CORS_ALLOWED_ORIGINS = [
+    
     "http://localhost:5174",
     "https://neo2.tecnavis.com",
     "https://paycollection.onrender.com"
@@ -87,6 +89,8 @@ DATABASES = {
 }
 
 
+
+
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
@@ -97,6 +101,7 @@ DATABASES = {
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
+    
     "http://localhost:5174",
     "https://neo2.tecnavis.com"
 
