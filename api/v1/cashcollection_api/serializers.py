@@ -163,12 +163,12 @@ class CashCollectionSerializer(serializers.ModelSerializer):
         """
         Calculate custom installments based on customer name suffix
         """
-        
+        # Extract numeric suffix from customer name
         customer_name = f"{obj.customer.user.first_name} {obj.customer.user.last_name}"
         match = re.search(r'\s*(\d+)$', customer_name)
         suffix = int(match.group(1)) if match else 1
 
-        
+        # Base total installments
         base_total = 51
         total_installments = base_total * suffix
 
@@ -181,7 +181,7 @@ class CashCollectionSerializer(serializers.ModelSerializer):
     def to_representation(self, obj):
         representation = super().to_representation(obj)
         
-    
+        # Add custom installment calculations
         custom_installments = self.calculate_custom_installments(obj)
         representation.update({
             'custom_installments': custom_installments,
