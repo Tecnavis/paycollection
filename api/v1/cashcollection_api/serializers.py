@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-from collectionplans.models import CashCollection, Scheme, CashCollectionEntry
+from collectionplans.models import CashCollection, Scheme, CashCollectionEntry , CollectionEntry
 from django.db.models import Sum
 from decimal import Decimal
 import re
@@ -224,3 +224,52 @@ class CustomerSchemePaymentSerializer(serializers.ModelSerializer):
                 "email": user.email,
             }
         return None
+    
+
+
+
+
+class CollectionEntrySerializer(serializers.ModelSerializer):
+    created_by_name = serializers.SerializerMethodField()
+    updated_by_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = CollectionEntry
+        fields = '__all__'
+        read_only_fields = ('created_by', 'updated_by', 'created_at', 'updated_at')
+    
+    def get_created_by_name(self, obj):
+        """Returns the name of the user who created the entry"""
+        if obj.created_by:
+            return f"{obj.created_by.first_name} {obj.created_by.last_name}".strip() or obj.created_by.email
+        return None
+    
+    def get_updated_by_name(self, obj):
+        """Returns the name of the user who last updated the entry"""
+        if obj.updated_by:
+            return f"{obj.updated_by.first_name} {obj.updated_by.last_name}".strip() or obj.updated_by.email
+        return None
+    
+    def validate(self, data):
+        """Validate the entry data"""
+        amount = data.get('amount')
+        if amount and float(amount) <= 0:
+            raise serializers.ValidationError("Amount must be greater than zero.")
+        
+        return data
+    
+    def create(self, validated_data):
+        """Create a new collection entry with user tracking"""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['created_by'] = request.user
+        
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        """Update an existing collection entry with user tracking"""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['updated_by'] = request.user
+        
+        return super().update(instance, validated_data)

@@ -2,6 +2,9 @@ from django.db import models
 from customer.models import Customer
 from users.models import CustomUser
 from financials.models import Transaction
+from django.contrib.auth import get_user_model
+
+CustomUser = get_user_model()
 
 
 class CollectionFrequencyChoices:
@@ -112,3 +115,47 @@ class CashTransfer(models.Model):
 
     def __str__(self):
         return f"{self.source} to {self.destination} - {self.amount} - {self.transfer_date}"
+    
+
+
+class CollectionEntry(models.Model):
+    """Model for tracking credit and debit collection entries"""
+    
+    TYPE_CHOICES = [
+        ("credit", "Credit"),
+        ("debit", "Debit")
+    ]
+    
+    type = models.CharField(
+        max_length=10,
+        choices=TYPE_CHOICES,
+        default="credit"
+    )
+    
+    date = models.DateField()
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    narration = models.TextField(blank=True, null=True)
+    
+
+    created_by = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name="created_collection_entries"  
+    )
+    updated_by = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name="updated_collection_entries" 
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name = "Collection Entry"
+        verbose_name_plural = "Collection Entries"
+    
+    def __str__(self):
+        return f"{self.type.capitalize()} - {self.amount} on {self.date}"

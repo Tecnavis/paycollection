@@ -28,4 +28,12 @@ urlpatterns = [
     path("customer-scheme-payments/", views.customer_scheme_payment_list, name="customer-scheme-payments"),
     path("customer-scheme-payment/", views.customer_scheme_payment_list_logged_in_user, name="customer-scheme-payments-by-id"),
     path('customer-schemes/', views.get_customer_schemes, name='customer-scheme-list'),
+
+    # Daily Collection Entry
+    path("collections/", views.collection_list, name="collection_list"),
+    path("collections/create/", views.collection_create, name="collection_create"),
+    path("collections/<int:pk>/", views.collection_detail_or_update_or_delete, name="collection_detail_update_delete"),
+    path("collections/summary/", views.collection_summary, name="collection_summary"),
+
+    
 ]

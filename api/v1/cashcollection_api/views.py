@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from .serializers import SchemeSerializer, CashCollectionSerializer, CashCollectionEntrySerializer, CustomerSchemePaymentSerializer
+from .serializers import SchemeSerializer, CashCollectionSerializer, CashCollectionEntrySerializer, CustomerSchemePaymentSerializer,CollectionEntrySerializer
 from rest_framework.response import Response
 from rest_framework import status
 from collectionplans.models import CashCollection, Scheme
@@ -7,7 +7,10 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import permission_classes
 from customer.models import Customer
-from collectionplans.models import CashCollectionEntry
+from collectionplans.models import CashCollectionEntry,CollectionEntry
+from django.db.models import Sum, Case, When, DecimalField, F
+from django.db.models.functions import Coalesce
+from decimal import Decimal
 
 
 @api_view(['GET'])
@@ -247,3 +250,140 @@ def get_customer_schemes(request):
     serializer = CashCollectionSerializer(queryset, many=True)
     
     return Response(serializer.data)
+
+
+
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def collection_list(request):
+    """Get all collection entries with running totals"""
+    entries = CollectionEntry.objects.all().order_by('date', 'created_at')
+    
+    
+    running_total = Decimal('0.00')
+    entries_with_totals = []
+    
+    for entry in entries:
+        if entry.type == 'credit':
+            running_total += entry.amount
+        else:  
+            running_total -= entry.amount
+        
+        entry_data = CollectionEntrySerializer(entry).data
+        entry_data['running_total'] = running_total
+        entries_with_totals.append(entry_data)
+    
+    return Response(entries_with_totals, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def collection_create(request):
+    """Create a new collection entry"""
+    serializer = CollectionEntrySerializer(data=request.data, context={'request': request})
+    
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def collection_detail(request, pk):
+    """Get details of a specific collection entry"""
+    try:
+        entry = CollectionEntry.objects.get(pk=pk)
+    except CollectionEntry.DoesNotExist:
+        return Response({"error": "Collection entry not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = CollectionEntrySerializer(entry)
+    return Response(serializer.data)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def collection_update(request, pk):
+    """Update a collection entry"""
+    try:
+        entry = CollectionEntry.objects.get(pk=pk)
+    except CollectionEntry.DoesNotExist:
+        return Response({"error": "Collection entry not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = CollectionEntrySerializer(
+        entry, 
+        data=request.data, 
+        partial=True,
+        context={'request': request}
+    )
+    
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def collection_delete(request, pk):
+    """Delete a collection entry"""
+    try:
+        entry = CollectionEntry.objects.get(pk=pk)
+    except CollectionEntry.DoesNotExist:
+        return Response({"error": "Collection entry not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    entry.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def collection_summary(request):
+    """Get summary statistics for collections"""
+    
+    summary = CollectionEntry.objects.aggregate(
+        total_credit=Coalesce(
+            Sum(Case(When(type='credit', then=F('amount')), output_field=DecimalField())), 
+            Decimal('0.00')
+        ),
+        total_debit=Coalesce(
+            Sum(Case(When(type='debit', then=F('amount')), output_field=DecimalField())), 
+            Decimal('0.00')
+        )
+    )
+    
+    summary['balance'] = summary['total_credit'] - summary['total_debit']
+    
+    return Response(summary, status=status.HTTP_200_OK)
+
+
+@api_view(['GET', 'PATCH', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def collection_detail_or_update_or_delete(request, pk):
+    """Handle GET, PATCH, DELETE for a collection entry at the same endpoint"""
+    try:
+        entry = CollectionEntry.objects.get(pk=pk)
+    except CollectionEntry.DoesNotExist:
+        return Response({"error": "Collection entry not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = CollectionEntrySerializer(entry)
+        return Response(serializer.data)
+    
+    elif request.method == 'PATCH':
+        serializer = CollectionEntrySerializer(
+            entry, 
+            data=request.data, 
+            partial=True,
+            context={'request': request}
+        )
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        entry.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
