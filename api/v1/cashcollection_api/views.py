@@ -262,14 +262,14 @@ def collection_list(request):
     """Get all collection entries with running totals"""
     entries = CollectionEntry.objects.all().order_by('date', 'created_at')
     
-    
+    # Calculate running total
     running_total = Decimal('0.00')
     entries_with_totals = []
     
     for entry in entries:
         if entry.type == 'credit':
             running_total += entry.amount
-        else:  
+        else:  # debit
             running_total -= entry.amount
         
         entry_data = CollectionEntrySerializer(entry).data
@@ -340,7 +340,7 @@ def collection_delete(request, pk):
 @permission_classes([IsAuthenticated])
 def collection_summary(request):
     """Get summary statistics for collections"""
-    
+    # Get totals for credit and debit
     summary = CollectionEntry.objects.aggregate(
         total_credit=Coalesce(
             Sum(Case(When(type='credit', then=F('amount')), output_field=DecimalField())), 
@@ -352,6 +352,7 @@ def collection_summary(request):
         )
     )
     
+    # Calculate balance
     summary['balance'] = summary['total_credit'] - summary['total_debit']
     
     return Response(summary, status=status.HTTP_200_OK)

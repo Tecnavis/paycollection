@@ -2,9 +2,6 @@ from django.db import models
 from customer.models import Customer
 from users.models import CustomUser
 from financials.models import Transaction
-from django.contrib.auth import get_user_model
-
-CustomUser = get_user_model()
 
 
 class CollectionFrequencyChoices:
@@ -116,7 +113,9 @@ class CashTransfer(models.Model):
     def __str__(self):
         return f"{self.source} to {self.destination} - {self.amount} - {self.transfer_date}"
     
+from django.contrib.auth import get_user_model
 
+CustomUser = get_user_model()
 
 class CollectionEntry(models.Model):
     """Model for tracking credit and debit collection entries"""
@@ -136,18 +135,18 @@ class CollectionEntry(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     narration = models.TextField(blank=True, null=True)
     
-
+    # Tracking fields (unique related_name values to avoid conflicts)
     created_by = models.ForeignKey(
         CustomUser, 
         on_delete=models.SET_NULL, 
         null=True, 
-        related_name="created_collection_entries"  
+        related_name="created_collection_entries"  # changed here
     )
     updated_by = models.ForeignKey(
         CustomUser, 
         on_delete=models.SET_NULL, 
         null=True, 
-        related_name="updated_collection_entries" 
+        related_name="updated_collection_entries"  # changed here
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

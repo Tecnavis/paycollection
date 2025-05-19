@@ -252,6 +252,7 @@ class CollectionEntrySerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         """Validate the entry data"""
+        # Amount validation
         amount = data.get('amount')
         if amount and float(amount) <= 0:
             raise serializers.ValidationError("Amount must be greater than zero.")
