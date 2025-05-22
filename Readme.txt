@@ -86,7 +86,7 @@ linux
 find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
 
 
-
+aswrgtrhytujttdrstere
 DATABASES NAMES 
 
 IN PRODUCTION
