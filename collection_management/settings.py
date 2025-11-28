@@ -2,12 +2,13 @@ from pathlib import Path
 
 import os
 from dotenv import load_dotenv
+IS_RENDER = os.getenv("RENDER", False)
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = ('(+$dka)c&)3^rz8xo*4z6!(wo7d1py=(ekc7=s!kng5ctv2dpg')
 
 DEBUG = True
 
@@ -77,16 +78,32 @@ WSGI_APPLICATION = 'collection_management.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('PGDATABASE'),
-        'USER': os.getenv('PGUSER'),
-        'PASSWORD': os.getenv('PGPASSWORD'),
-        'HOST': os.getenv('PGHOST'),
-        'PORT': os.getenv('PGPORT', '5432'),  
+        'NAME': 'thoufeeq_cash_collection',
+        'USER': 'thoufeeq_cash_collection_user',
+        'PASSWORD': 'HXJk7DJiEQHRIi67TRgIhPJm5fwkMZ8V',
+        'HOST': 'dpg-d4kj3rre5dus73f8v6jg-a.oregon-postgres.render.com',
+        'PORT': '5432',
         'OPTIONS': {
             'sslmode': 'require',
-        }
+        },
     }
 }
+
+
+
+
+    #      {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'paycollection_db',
+    #     'USER': 'postgres',
+    #     'PASSWORD': 'Rashinechikunnu99@kt',
+    #     'HOST': 'localhost',
+    #     'PORT': '5432',
+    # 
+
+
+
+
 
 
 
