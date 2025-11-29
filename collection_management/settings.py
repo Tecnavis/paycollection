@@ -92,8 +92,6 @@ DATABASES = {
 }
 
 
-
-
     #      {
     #     'ENGINE': 'django.db.backends.postgresql',
     #     'NAME': 'paycollection_db',
