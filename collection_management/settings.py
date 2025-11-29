@@ -15,7 +15,13 @@ SECRET_KEY = ('(+$dka)c&)3^rz8xo*4z6!(wo7d1py=(ekc7=s!kng5ctv2dpg')
 DEBUG = True
 
 
-ALLOWED_HOSTS = ["paycollection.onrender.com", "localhost","127.0.0.1"]
+ALLOWED_HOSTS = [
+    "paycollection-2h8k.onrender.com",   # <--- YOUR REAL LIVE DOMAIN 
+    "localhost",
+    "127.0.0.1",
+    "neo.tecnavis.in",                   # YOUR FRONTEND DOMAIN
+    "testserver"                         # for Django APIClient
+]
 
 
 CORS_ALLOWED_ORIGINS = [
