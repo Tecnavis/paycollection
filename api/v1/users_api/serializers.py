@@ -35,23 +35,33 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    # Accept either `email` or `username` from the client for flexibility
+    email = serializers.EmailField(required=False)
+    username = serializers.CharField(required=False)
     password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
+        # Support both payload styles:
+        # 1) { "email": "...", "password": "..." }
+        # 2) { "username": "...", "password": "..." }  (frontend may label the field "email")
         email = attrs.get('email')
+        username = attrs.get('username')
         password = attrs.get('password')
+
+        # If only username was sent, treat it as email for authentication
+        if not email and username:
+            email = username
 
         if email and password:
             user = authenticate(email=email, password=password)
-            print(user,"user??")
+            print(user, "user??")
 
             if not user:
                 raise serializers.ValidationError('Invalid email or password.')
             if not user.is_active:
                 raise serializers.ValidationError('User account is disabled.')
         else:
-            raise serializers.ValidationError('Must include "email" and "password".')
+            raise serializers.ValidationError('Must include "email" (or "username") and "password".')
 
         attrs['user'] = user
         return attrs
