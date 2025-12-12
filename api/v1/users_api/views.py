@@ -21,39 +21,55 @@ import logging
 @permission_classes([AllowAny])
 def login_user(request):
     """
-    Flexible login endpoint that accepts either `email` or `username`
-    plus `password`.
+    Login endpoint that accepts phone number and password.
     """
     data = request.data
 
-    # Accept several possible field names from the frontend
-    identifier = (
-        data.get('email')
-        or data.get('username')
-        or data.get('user')
-        or data.get('login')
-        or data.get('email_id')
+    # Accept phone number from the frontend
+    phone_number = (
+        data.get('phone_number')
+        or data.get('phone')
+        or data.get('contact_number')
+        or data.get('mobile')
     )
     password = data.get('password')
 
-    if not identifier or not password:
+    if not phone_number or not password:
         return Response(
-            {"detail": 'Must include "email" (or "username") and "password".'},
+            {"detail": 'Must include "phone_number" and "password".'},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Treat identifier as email, since CustomUser authenticates by email
-    user = authenticate(email=identifier, password=password)
-    print("login_user identifier:", identifier, "=> user:", user)
+    # Authenticate by phone number
+    # Handle multiple users with same phone number by trying all matches
+    try:
+        users = CustomUser.objects.filter(contact_number=phone_number, is_active=True)
+        
+        user = None
+        for u in users:
+            if u.check_password(password):
+                user = u
+                break
+        
+        # If no match found, try Django's authenticate as fallback
+        if user is None:
+            user = authenticate(username=phone_number, password=password)
+        
+        print("login_user phone_number:", phone_number, "=> user:", user)
 
-    if user is None:
+        if user is None:
+            return Response(
+                {"detail": "Invalid phone number or password."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not user.is_active:
+            return Response(
+                {"detail": "User account is disabled."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    except Exception as e:
         return Response(
-            {"detail": "Invalid email or password."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    if not user.is_active:
-        return Response(
-            {"detail": "User account is disabled."},
+            {"detail": f"Authentication error: {str(e)}"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -64,6 +80,7 @@ def login_user(request):
         'user_id': user.id,
         'username': user.username,
         'email': user.email,
+        'contact_number': user.contact_number,
         'role': getattr(user, 'role', None),
         'access_token': str(refresh.access_token),
         'refresh_token': str(refresh),

@@ -50,37 +50,63 @@ def scheme_update(request, id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def enroll_customer_in_scheme(request):
-    """Enrolls a customer in a selected scheme (Creates CashCollection)."""
+    """Enrolls multiple customers in a selected scheme (Creates CashCollection)."""
    
-    if not request.data.get("customer") or not request.data.get("scheme"):
-        return Response({"error": "Customer and Scheme are required"}, status=status.HTTP_400_BAD_REQUEST)
+    scheme_id = request.data.get("scheme")
+    customer_ids = request.data.get("customers")
+
+    # Handle single customer logic for backward compatibility
+    if not customer_ids and request.data.get("customer"):
+        customer_ids = [request.data.get("customer")]
+
+    if not scheme_id or not customer_ids:
+        return Response({"error": "Scheme and Customers (list) are required"}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
-        customer = Customer.objects.get(id=request.data["customer"])
-    except Customer.DoesNotExist:
-        return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
-    try:
-        scheme = Scheme.objects.get(id=request.data["scheme"])
+        scheme = Scheme.objects.get(id=scheme_id)
     except Scheme.DoesNotExist:
         return Response({"error": "Scheme not found"}, status=status.HTTP_404_NOT_FOUND)
     
-    existing_entry = CashCollection.objects.filter(scheme=scheme, customer=customer).exists()
-    if existing_entry:
-        return Response({"error": "Customer is already enrolled in this scheme"}, status=status.HTTP_400_BAD_REQUEST)
-    
+    created_collections = []
+    errors = []
 
-    data = request.data.copy()
-    
-    serializer = CashCollectionSerializer(data=data)
-    if serializer.is_valid():
+    for customer_id in customer_ids:
+        try:
+            customer = Customer.objects.get(id=customer_id)
+        except Customer.DoesNotExist:
+            errors.append({"customer_id": customer_id, "error": "Customer not found"})
+            continue
+
+        existing_entry = CashCollection.objects.filter(scheme=scheme, customer=customer).exists()
+        if existing_entry:
+            errors.append({"customer_id": customer_id, "error": "Customer is already enrolled in this scheme"})
+            continue
         
-        cash_collection = serializer.save(
-            created_by=request.user,
-            customer=customer,
-            scheme=scheme
-        )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    else:
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Prepare data for this specific customer
+        data = request.data.copy()
+        data["customer"] = customer_id
+        
+        serializer = CashCollectionSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(
+                created_by=request.user,
+                customer=customer,
+                scheme=scheme
+            )
+            created_collections.append(serializer.data)
+        else:
+            errors.append({"customer_id": customer_id, "error": serializer.errors})
+
+    if not created_collections and errors:
+        return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    response_status = status.HTTP_201_CREATED if created_collections else status.HTTP_400_BAD_REQUEST
+    
+    return Response({
+        "message": f"Successfully enrolled {len(created_collections)} customers.",
+        "data": created_collections,
+        "errors": errors
+    }, status=response_status)
 
 
 @api_view(['GET'])

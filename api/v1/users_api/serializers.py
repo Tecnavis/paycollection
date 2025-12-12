@@ -16,52 +16,50 @@ class CustomUserSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'is_staff': {'read_only': True},
             'is_active': {'required': False},
-            # 'password': {'write_only': True} 
+            'contact_number': {'required': True},  # Contact number is required for phone authentication
             'password': {'write_only': True, 'required': False}, 
         }
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)  
+        contact_number = validated_data.pop('contact_number')  # Extract contact_number as it's the USERNAME_FIELD
         validated_data['is_staff'] = True  
 
-        # Use create_user to ensure password hashing
-        user = CustomUser.objects.create_user(**validated_data)  
-
-        if password:
-            user.set_password(password)  # Hash password
-            user.save()
+        # Use create_user to ensure password hashing (contact_number is first argument)
+        user = CustomUser.objects.create_user(contact_number, password=password, **validated_data)
 
         return user
 
 
 class LoginSerializer(serializers.Serializer):
-    # Accept either `email` or `username` from the client for flexibility
-    email = serializers.EmailField(required=False)
-    username = serializers.CharField(required=False)
+    # Accept phone number from the client
+    phone_number = serializers.CharField(required=False)
+    phone = serializers.CharField(required=False)
+    contact_number = serializers.CharField(required=False)
+    mobile = serializers.CharField(required=False)
     password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
-        # Support both payload styles:
-        # 1) { "email": "...", "password": "..." }
-        # 2) { "username": "...", "password": "..." }  (frontend may label the field "email")
-        email = attrs.get('email')
-        username = attrs.get('username')
+        # Get phone number from various possible field names
+        phone_number = (
+            attrs.get('phone_number')
+            or attrs.get('phone')
+            or attrs.get('contact_number')
+            or attrs.get('mobile')
+        )
         password = attrs.get('password')
 
-        # If only username was sent, treat it as email for authentication
-        if not email and username:
-            email = username
+        if not phone_number or not password:
+            raise serializers.ValidationError('Must include "phone_number" and "password".')
 
-        if email and password:
-            user = authenticate(email=email, password=password)
-            print(user, "user??")
+        # Authenticate by phone number (contact_number is USERNAME_FIELD)
+        user = authenticate(username=phone_number, password=password)
+        print(user, "user??")
 
-            if not user:
-                raise serializers.ValidationError('Invalid email or password.')
-            if not user.is_active:
-                raise serializers.ValidationError('User account is disabled.')
-        else:
-            raise serializers.ValidationError('Must include "email" (or "username") and "password".')
+        if not user:
+            raise serializers.ValidationError('Invalid phone number or password.')
+        if not user.is_active:
+            raise serializers.ValidationError('User account is disabled.')
 
         attrs['user'] = user
         return attrs

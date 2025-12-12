@@ -15,13 +15,7 @@ SECRET_KEY = ('(+$dka)c&)3^rz8xo*4z6!(wo7d1py=(ekc7=s!kng5ctv2dpg')
 DEBUG = True
 
 
-ALLOWED_HOSTS = [
-    "paycollection-2h8k.onrender.com",   # <--- YOUR REAL LIVE DOMAIN 
-    "localhost",
-    "127.0.0.1",
-    "neo.tecnavis.in",                   # YOUR FRONTEND DOMAIN
-    "testserver"                         # for Django APIClient
-]
+ALLOWED_HOSTS = ["paycollection.onrender.com", "localhost","127.0.0.1"]
 
 
 CORS_ALLOWED_ORIGINS = [
@@ -85,28 +79,27 @@ WSGI_APPLICATION = 'collection_management.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'thoufeeq_cash_collection',
-        'USER': 'thoufeeq_cash_collection_user',
-        'PASSWORD': 'HXJk7DJiEQHRIi67TRgIhPJm5fwkMZ8V',
-        'HOST': 'dpg-d4kj3rre5dus73f8v6jg-a.oregon-postgres.render.com',
-        'PORT': '5432',
-        'OPTIONS': {
-            'sslmode': 'require',
-        },
-    }
-}
-
-
-    #      {
     #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'paycollection_db',
-    #     'USER': 'postgres',
-    #     'PASSWORD': 'Rashinechikunnu99@kt',
-    #     'HOST': 'localhost',
+    #     'NAME': 'thoufeeq_cash_collection',
+    #     'USER': 'thoufeeq_cash_collection_user',
+    #     'PASSWORD': 'HXJk7DJiEQHRIi67TRgIhPJm5fwkMZ8V',
+    #     'HOST': 'dpg-d4kj3rre5dus73f8v6jg-a.oregon-postgres.render.com',
     #     'PORT': '5432',
-    # 
+    #     'OPTIONS': {
+    #         'sslmode': 'require',
+    #     },
+    # }
 
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'paycollection_db',
+        'USER': 'postgres',
+        'PASSWORD': 'Rashinechikunnu99@kt',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    
+    }
+    
+}
 
 
 

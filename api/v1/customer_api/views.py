@@ -141,5 +141,9 @@ def customer_create(request):
             {"message": "Customer created successfully", "data": serializer.data},
             status=status.HTTP_201_CREATED
         )
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # Return detailed error messages
+    return Response(
+        {"errors": serializer.errors, "message": "Validation failed"},
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
