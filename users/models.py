@@ -75,6 +75,7 @@
 
 
 
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils.translation import gettext_lazy as _
@@ -96,22 +97,21 @@ class UserRoles:
     ]
 
 
-import uuid
-
 class CustomUserManager(BaseUserManager):
-    def create_user(self, contact_number, password=None, **extra_fields):
-        if not contact_number:
-            raise ValueError("Phone number is required")
 
-        if "username" not in extra_fields:
-            extra_fields["username"] = f"{contact_number}-{uuid.uuid4()}"
+    def create_user(self, username=None, password=None, **extra_fields):
+        if not username:
+            raise ValueError("Username is required")
 
-        user = self.model(contact_number=contact_number, **extra_fields)
+        user = self.model(
+            username=username,
+            **extra_fields
+        )
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, contact_number, password=None, **extra_fields):
+    def create_superuser(self, username, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("role", UserRoles.SUPER_ADMIN)
@@ -121,20 +121,21 @@ class CustomUserManager(BaseUserManager):
         if extra_fields.get("is_superuser") is not True:
             raise ValueError("Superuser must have is_superuser=True")
 
-        return self.create_user(contact_number, password, **extra_fields)
+        return self.create_user(username, password, **extra_fields)
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
 
-    # 🔥 Phone login only - allow multiple customers with same number
-    contact_number = models.CharField(max_length=15, unique=False)
+    # 🔥 Phone number (not unique by design)
+    contact_number = models.CharField(max_length=15, blank=True, null=True)
 
-    # Optional fields
     first_name = models.CharField(_("First Name"), max_length=255, blank=True)
     last_name = models.CharField(_("Last Name"), max_length=255, blank=True)
+
+    # Email optional
     email = models.EmailField(_("Email"), blank=True, null=True)
-    
-    # Internal username for Django auth
+
+    # 🔥 PRIMARY LOGIN FIELD
     username = models.CharField(max_length=150, unique=True, default=uuid.uuid4)
 
     role = models.CharField(max_length=20, choices=UserRoles.CHOICES, default=UserRoles.STAFF)
@@ -147,24 +148,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     objects = CustomUserManager()
 
-    # 🔥 MAIN LOGIN FIELD - Must be unique
     USERNAME_FIELD = "username"
-
-    # Fields to ask for when creating a superuser
-    REQUIRED_FIELDS = ["contact_number"]
-
-    class Meta:
-        # Allow duplicate phone numbers (especially for customers)
-        # Uniqueness can be enforced at application level if needed for non-customer roles
-        pass
+    REQUIRED_FIELDS = []  # 👈 important
 
     def __str__(self):
-        return self.contact_number
+        return self.username
 
     def save(self, *args, **kwargs):
-        # Auto staff permission for admin/super admin
         if self.role in [UserRoles.ADMIN, UserRoles.SUPER_ADMIN]:
             self.is_staff = True
         super().save(*args, **kwargs)
-
-
