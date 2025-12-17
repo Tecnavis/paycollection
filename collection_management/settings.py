@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import os
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -77,29 +78,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'collection_management.wsgi.application'
 
-DATABASES = {
-    'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'thoufeeq_cash_collection',
-    #     'USER': 'thoufeeq_cash_collection_user',
-    #     'PASSWORD': 'HXJk7DJiEQHRIi67TRgIhPJm5fwkMZ8V',
-    #     'HOST': 'dpg-d4kj3rre5dus73f8v6jg-a.oregon-postgres.render.com',
-    #     'PORT': '5432',
-    #     'OPTIONS': {
-    #         'sslmode': 'require',
-    #     },
-    # }
 
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'paycollection_db',
-        'USER': 'postgres',
-        'PASSWORD': 'Rashinechikunnu99@kt',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    
-    }
-    
+        
+DATABASES = {
+    'default': dj_database_url.parse(
+        os.environ["DATABASE_URL"],
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
+
 
 
 
