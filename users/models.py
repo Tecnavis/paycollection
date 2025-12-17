@@ -73,9 +73,6 @@
 #             self.is_staff = True
 #         super().save(*args, **kwargs)
 
-
-
-import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils.translation import gettext_lazy as _
@@ -102,10 +99,7 @@ class CustomUserManager(BaseUserManager):
         if not contact_number:
             raise ValueError("Phone number is required")
 
-        user = self.model(
-            contact_number=contact_number,
-            **extra_fields
-        )
+        user = self.model(contact_number=contact_number, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -121,14 +115,14 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
 
-    # 🔥 MAIN LOGIN FIELD
+    # 🔥 LOGIN FIELD
     contact_number = models.CharField(
         _("Phone Number"),
         max_length=15,
         unique=True
     )
 
-    # OPTIONAL FIELDS (NO CONSTRAINTS)
+    # OPTIONAL FIELDS
     email = models.EmailField(_("Email"), blank=True, null=True)
     first_name = models.CharField(_("First name"), max_length=150, blank=True)
     last_name = models.CharField(_("Last name"), max_length=150, blank=True)
@@ -146,7 +140,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     USERNAME_FIELD = "contact_number"
-    REQUIRED_FIELDS = []   # 👈 VERY IMPORTANT
+    REQUIRED_FIELDS = []   # 👈 CRITICAL
 
     def __str__(self):
         return self.contact_number
