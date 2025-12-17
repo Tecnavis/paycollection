@@ -98,61 +98,58 @@ class UserRoles:
 
 
 class CustomUserManager(BaseUserManager):
-
-    def create_user(self, username=None, password=None, **extra_fields):
-        if not username:
-            raise ValueError("Username is required")
+    def create_user(self, contact_number, password=None, **extra_fields):
+        if not contact_number:
+            raise ValueError("Phone number is required")
 
         user = self.model(
-            username=username,
+            contact_number=contact_number,
             **extra_fields
         )
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, password=None, **extra_fields):
+    def create_superuser(self, contact_number, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("role", UserRoles.SUPER_ADMIN)
+        extra_fields.setdefault("is_active", True)
 
-        if extra_fields.get("is_staff") is not True:
-            raise ValueError("Superuser must have is_staff=True")
-        if extra_fields.get("is_superuser") is not True:
-            raise ValueError("Superuser must have is_superuser=True")
-
-        return self.create_user(username, password, **extra_fields)
+        return self.create_user(contact_number, password, **extra_fields)
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
 
-    # 🔥 Phone number (not unique by design)
-    contact_number = models.CharField(max_length=15, blank=True, null=True)
+    # 🔥 MAIN LOGIN FIELD
+    contact_number = models.CharField(
+        _("Phone Number"),
+        max_length=15,
+        unique=True
+    )
 
-    first_name = models.CharField(_("First Name"), max_length=255, blank=True)
-    last_name = models.CharField(_("Last Name"), max_length=255, blank=True)
-
-    # Email optional
+    # OPTIONAL FIELDS (NO CONSTRAINTS)
     email = models.EmailField(_("Email"), blank=True, null=True)
+    first_name = models.CharField(_("First name"), max_length=150, blank=True)
+    last_name = models.CharField(_("Last name"), max_length=150, blank=True)
 
-    # 🔥 PRIMARY LOGIN FIELD
-    username = models.CharField(max_length=150, unique=True, default=uuid.uuid4)
+    role = models.CharField(
+        max_length=20,
+        choices=UserRoles.CHOICES,
+        default=UserRoles.STAFF
+    )
 
-    role = models.CharField(max_length=20, choices=UserRoles.CHOICES, default=UserRoles.STAFF)
-    biography = models.TextField(blank=True, null=True)
-
-    is_active = models.BooleanField(_("Is active"), default=True)
-    is_staff = models.BooleanField(_("Is staff"), default=False)
-    is_deleted = models.BooleanField(_("Is deleted"), default=False)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
 
     objects = CustomUserManager()
 
-    USERNAME_FIELD = "username"
-    REQUIRED_FIELDS = []  # 👈 important
+    USERNAME_FIELD = "contact_number"
+    REQUIRED_FIELDS = []   # 👈 VERY IMPORTANT
 
     def __str__(self):
-        return self.username
+        return self.contact_number
 
     def save(self, *args, **kwargs):
         if self.role in [UserRoles.ADMIN, UserRoles.SUPER_ADMIN]:
