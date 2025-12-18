@@ -88,6 +88,10 @@ DATABASES = {
     )
 }
 
+AUTHENTICATION_BACKENDS = [
+    'users.backends.PhoneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 
 
