@@ -1,21 +1,34 @@
-from django.shortcuts import render
-
+from django.contrib.auth import authenticate
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import PhoneLoginSerializer
 
-class PhoneLoginView(APIView):
+class LoginView(APIView):
+
     def post(self, request):
-        serializer = PhoneLoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        phone = request.data.get("phone")
+        password = request.data.get("password")
 
-        user = serializer.validated_data['user']
-        refresh = RefreshToken.for_user(user)
+        if not phone or not password:
+            return Response(
+                {"error": "Phone number and password required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        return Response({
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-            "role": user.role,
-        })
+        user = authenticate(username=phone, password=password)
+
+        if user is None:
+            return Response(
+                {"error": "Invalid phone number or password"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        return Response(
+            {
+                "message": "Login successful",
+                "user_id": user.id,
+                "phone": user.contact_number,
+                "role": user.role
+            },
+            status=status.HTTP_200_OK
+        )
