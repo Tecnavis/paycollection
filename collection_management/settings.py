@@ -5,7 +5,7 @@ import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
-IS_RENDER = os.getenv("RENDER", False)
+IS_RENDER = os.getenv("RENDER") == "true"
 
 load_dotenv()
 
@@ -80,13 +80,21 @@ WSGI_APPLICATION = 'collection_management.wsgi.application'
 
 
         
-DATABASES = {
-    'default': dj_database_url.parse(
-        os.environ["DATABASE_URL"],
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
+if IS_RENDER:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            os.environ["DATABASE_URL"],
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
