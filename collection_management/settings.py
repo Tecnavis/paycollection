@@ -299,7 +299,7 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv("DB_NAME", "tecnavis_db"),
+            'NAME': os.getenv("DB_NAME", "thoufeeq-cash-collection"),
             'USER': os.getenv("DB_USER", "postgres"),
             'PASSWORD': os.getenv("DB_PASSWORD", "Rashinechikunnu99@kt"),
             'HOST': os.getenv("DB_HOST", "localhost"),
