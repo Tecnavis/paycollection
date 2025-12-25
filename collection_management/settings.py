@@ -211,8 +211,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "paycollection.onrender.com",
+    "paycollection-2h8k.onrender.com",
     "localhost",
     "127.0.0.1",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://paycollection-2h8k.onrender.com",
+    "https://neo.tecnavis.in",
 ]
 
 IS_RENDER = os.getenv("RENDER") == "true"
